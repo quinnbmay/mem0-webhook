@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 import uvicorn
 from mem0 import AsyncMemoryClient
@@ -149,15 +150,62 @@ async def create_memory(
         raise
 
 # API Endpoints
-@app.get("/", response_model=WebhookHealthResponse)
+@app.get("/")
 async def root():
     """Root endpoint with service information"""
-    return WebhookHealthResponse(
-        status="healthy",
-        timestamp=datetime.now().isoformat(),
-        mem0_connected=True,
-        webhook_ready=True
-    )
+    html_content = """
+    <html>
+    <head>
+        <title>Mem0 Webhook API</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+            h1 { color: #333; }
+            .endpoint { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+            code { background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
+            .status { color: green; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>🧠 Mem0 Webhook API</h1>
+        <p class="status">✅ Service is running!</p>
+        
+        <h2>Available Endpoints:</h2>
+        
+        <div class="endpoint">
+            <strong>POST /webhook/memory</strong><br>
+            Create a single memory<br>
+            <code>{"content": "your memory", "user_id": "quinn_may"}</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /webhook/memories/batch</strong><br>
+            Create multiple memories<br>
+            <code>{"memories": [{"content": "memory 1"}, {"content": "memory 2"}]}</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /webhook/zapier</strong><br>
+            Zapier integration endpoint
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /webhook/generic</strong><br>
+            Generic webhook (accepts any JSON)
+        </div>
+        
+        <div class="endpoint">
+            <strong>GET /health</strong><br>
+            Health check endpoint
+        </div>
+        
+        <h3>Test with curl:</h3>
+        <pre>curl -X POST https://mem0-webhook-api-production.up.railway.app/webhook/memory \\
+  -H "Content-Type: application/json" \\
+  -d '{"content": "Test memory", "user_id": "quinn_may"}'</pre>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
 @app.get("/health", response_model=WebhookHealthResponse)
 async def health_check():
